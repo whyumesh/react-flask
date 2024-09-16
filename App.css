@@ -4,23 +4,124 @@
   color: #ffffff;
   height: 100vh;
   display: flex;
+  flex-direction: row; /* Change to row to accommodate the sidebar */
+  font-family: 'Poppins', sans-serif;
+  overflow: hidden; /* Prevent scroll overflow */
+}
+
+.sidebar {
+  width: 250px;
+  background-color: #1b1f3a;
+  padding: 20px;
+  transition: transform 0.3s ease; /* Smooth transition for toggling */
+  height: 100vh; /* Full height for the sidebar */
+  overflow-y: auto; /* Allow scrolling in the sidebar if needed */
+  position: relative;
+}
+
+.sidebar.hidden {
+  transform: translateX(-100%); /* Slide out when hidden */
+}
+
+.sidebar.visible {
+  transform: translateX(0); /* Slide in when visible */
+}
+
+.toggle-sidebar-arrow {
+  position: absolute;
+  top: 50%;
+  left: 100%; /* Positioned to the right of the sidebar */
+  transform: translateY(-50%);
+  background-color: #68d0ff;
+  color: white;
+  border: none;
+  padding: 10px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+}
+
+.sidebar.hidden ~ .toggle-sidebar-arrow {
+  left: 0; /* Move the arrow to the edge of the screen when sidebar is hidden */
+  transform: translateY(-50%) rotate(180deg); /* Rotate arrow when sidebar is hidden */
+}
+.toggle-sidebar-icon {
+  position: fixed; /* Position it relative to the viewport */
+  left: 0; /* Align to the left side of the viewport */
+  top: 50%; /* Center vertically */
+  transform: translateY(-50%); /* Center align */
+  cursor: pointer; /* Change cursor on hover */
+  z-index: 1000; /* Ensure it's above other content */
+}
+
+.new-session-btn {
+  background-color: #ff79c6;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-bottom: 20px;
+  display: block;
+  width: 100%;
+}
+
+.session-list {
+  margin-top: 20px;
+}
+
+.session-item {
+  padding: 15px;
+  background-color: #2c2f48;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.session-item:hover {
+  background-color: #3d4066;
+}
+
+.session-item.active {
+  background-color: #68d0ff;
+  color: #000;
+}
+
+/* Main content adjustments */
+.main-content {
+  flex-grow: 1;
+  padding: 20px;
+  display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start; /* Align items to the top to allow scrolling */
-  font-family: 'Poppins', sans-serif;
-  overflow-y: auto; /* Allow vertical scrolling if needed */
+  justify-content: flex-start;
+  overflow-y: auto;
+  transition: margin-left 0.3s ease;
+}
+
+.main-content.full-width {
+  margin-left: 0; /* When sidebar is hidden */
+}
+
+.main-content.with-sidebar {
+  margin-left: 250px; /* Adjust for the width of the sidebar */
 }
 
 .app-title {
   font-size: 2.5rem;
   color: #68d0ff;
-  margin-bottom: 10px; /* Space below the title */
+  margin-bottom: 10px;
 }
 
 .app-subtitle {
   font-size: 1.5rem;
   color: #f38eff;
-  margin-bottom: 20px; /* Space below the subtitle */
+  margin-bottom: 20px;
 }
 
 .button-container {
@@ -57,7 +158,7 @@
   border-radius: 12px;
   margin-bottom: 20px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  overflow-x: auto; /* Allow horizontal scrolling if needed */
+  overflow-x: auto;
 }
 
 .output-message h3, .error-message h3 {
@@ -71,7 +172,7 @@
 }
 
 .input-container {
-  position: fixed; /* Fixed position to stay at the bottom */
+  position: fixed;
   bottom: 0;
   width: 80%;
   max-width: 600px;
