@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import './App.css'; // Importing the CSS file for custom styles
+import './App.css';
 
 function App() {
-  const [outputs, setOutputs] = useState([]); // Store multiple outputs
+  const [outputs, setOutputs] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [inputPrompt, setInputPrompt] = useState('');
+  const [sessions, setSessions] = useState([]); // Array to manage session list
+  const [currentSession, setCurrentSession] = useState('');
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true); // Sidebar visibility
 
   const startRecording = async () => {
     setLoading(true);
@@ -13,14 +16,11 @@ function App() {
       const response = await fetch('/api/start_recording', { method: 'POST' });
       const result = await response.json();
       if (response.ok) {
-        console.log('Recording started:', result);
         setError('');
       } else {
-        console.error('Error starting recording:', result.error);
         setError(result.error);
       }
     } catch (error) {
-      console.error('Error:', error);
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -33,15 +33,12 @@ function App() {
       const response = await fetch('/api/stop_recording', { method: 'POST' });
       const result = await response.json();
       if (response.ok) {
-        console.log('Recording stopped successfully:', result);
-        setOutputs(prevOutputs => [...prevOutputs, result.result]); // Add new output to array
+        setOutputs(prevOutputs => [...prevOutputs, result.result]);
         setError('');
       } else {
-        console.error('Error stopping recording:', result.error);
         setError(result.error);
       }
     } catch (error) {
-      console.error('Error:', error);
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -73,64 +70,103 @@ function App() {
       }
 
       const result = await response.json();
-      setOutputs(prevOutputs => [...prevOutputs, result.response]); // Continue conversation with new response
+      setOutputs(prevOutputs => [...prevOutputs, result.response]);
       setInputPrompt('');
       setError('');
     } catch (error) {
-      console.error('Error:', error);
       setError(error.message);
     } finally {
       setLoading(false);
     }
   };
 
+  // Toggle sidebar visibility
+  const toggleSidebar = () => {
+    setIsSidebarVisible(!isSidebarVisible);
+  };
+
+  // Start a new session
+  const startNewSession = () => {
+    const newSession = `Session ${sessions.length + 1}`;
+    setSessions([newSession, ...sessions]);
+    setCurrentSession(newSession);
+    setOutputs([]); // Clear previous session output
+  };
+
   return (
     <div className="app-container">
-      <h1 className="app-title">Hello, Dev</h1>
-      <h2 className="app-subtitle">How Can I Help You Today?</h2>
-
-      <div className="button-container">
-        <button className="start-btn" onClick={startRecording} disabled={loading}>
-          {loading ? 'Starting...' : 'Start Recording'}
-        </button>
-        <button className="stop-btn" onClick={stopRecording} disabled={loading}>
-          {loading ? 'Stopping...' : 'Stop Recording'}
-        </button>
-      </div>
-
-      <div className="output-container">
-        {outputs.length > 0 && outputs.map((output, index) => (
-          <div key={index} className="output-message">
-            <h3 className="output-heading">Processed Output {index + 1}:</h3>
-            <div className="output-box">
-              <p className="output-text">{output}</p>
-            </div>
+      {isSidebarVisible ? (
+        <div className="sidebar">
+          <button className="toggle-sidebar-btn" onClick={toggleSidebar}>
+            Hide Sidebar
+          </button>
+          <button className="new-session-btn" onClick={startNewSession}>New Session</button>
+          <div className="session-list">
+            {sessions.map((session, index) => (
+              <div
+                key={index}
+                className={`session-item ${currentSession === session ? 'active' : ''}`}
+                onClick={() => setCurrentSession(session)}
+              >
+                {session}
+              </div>
+            ))}
           </div>
-        ))}
-        {error && (
-          <div className="error-message">
-            <h3>Error:</h3>
-            <p>{error}</p>
-          </div>
-        )}
-      </div>
-
-      <div className="input-container">
-        <input
-          type="text"
-          placeholder="Enter the Prompt Here"
-          className="input-prompt"
-          value={inputPrompt}
-          onChange={(e) => setInputPrompt(e.target.value)}
+        </div>
+      ) : (
+        <img
+          src="/public/sidebar.png" // Update the path if needed
+          alt="Show Sidebar"
+          className="toggle-sidebar-icon"
+          onClick={toggleSidebar}
         />
-        <button
-          type="submit"
-          className="submit-btn"
-          onClick={handleSubmitPrompt}
-          disabled={loading || !inputPrompt.trim()}
-        >
-          <i className="fas fa-arrow-right submit-icon"></i>
-        </button>
+      )}
+
+      <div className="main-content">
+        <h1 className="app-title">EternIQ</h1>
+        <h2 className="app-subtitle">Your  Eternal Coding Partner</h2>
+
+        <div className="button-container">
+          <button className="start-btn" onClick={startRecording} disabled={loading}>
+            {loading ? 'Starting...' : 'Start EternIQ'}
+          </button>
+          <button className="stop-btn" onClick={stopRecording} disabled={loading}>
+            {loading ? 'Stopping...' : 'Stop EternIQ'}
+          </button>
+        </div>
+
+        <div className="output-container">
+          {outputs.length > 0 && outputs.map((output, index) => (
+            <div key={index} className="output-message">
+              <h3>Processed Output {index + 1}:</h3>
+              <p>{output}</p>
+            </div>
+          ))}
+          {error && (
+            <div className="error-message">
+              <h3>Error:</h3>
+              <p>{error}</p>
+            </div>
+          )}
+        </div>
+
+        <div className="input-container">
+          <input
+            type="text"
+            placeholder="Enter the Prompt Here"
+            className="input-prompt"
+            value={inputPrompt}
+            onChange={(e) => setInputPrompt(e.target.value)}
+          />
+          <button
+            type="submit"
+            className="submit-btn"
+            onClick={handleSubmitPrompt}
+            disabled={loading || !inputPrompt.trim()}
+          >
+            <i className="fas fa-arrow-right submit-icon"></i>
+          </button>
+        </div>
       </div>
     </div>
   );
