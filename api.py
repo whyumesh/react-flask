@@ -12,7 +12,7 @@ import time
 import google.generativeai as genai
 
 # Load environment variables
-API_KEY = "AIzaSyDd9MceKFYXZV9cI0SxS0ATCOOEGaRdgEI"  # Directly use your API key here
+API_KEY = "AIzaSyDd9MceKFYXZV9cI0SxS0ATCOOEGaRdgEI"
 genai.configure(api_key=API_KEY)
 code_model = genai.GenerativeModel('gemini-1.5-flash')
 
@@ -52,7 +52,7 @@ def record_audio(filename, stop_event):
         frames.append(data)
 
     stream.stop_stream()
-    stream.close()  # Ensure the stream is properly closed
+    stream.close()
     audio.terminate()
 
     with wave.open(os.path.join(upload_dir, filename), 'wb') as wf:
@@ -75,7 +75,7 @@ def record_screen(filename, stop_event, mouse_positions):
         out.write(frame)
         mouse_positions.append((x, y))
 
-    out.release()  # Ensure the file is closed after recording
+    out.release()
 
 def combine_and_cleanup(video_filename, audio_filename, final_filename):
     video_clip = None
@@ -97,24 +97,37 @@ def combine_and_cleanup(video_filename, audio_filename, final_filename):
     return final_path
 
 def run_genai_logic_audio(audio_file):
+    """Generates a response by converting the audio file to text."""
     my_audio_file = genai.upload_file(path=audio_file)
+    
     while my_audio_file.state.name == "PROCESSING":
         time.sleep(5)
         my_audio_file = genai.get_file(my_audio_file.name)
-    prompt = "Convert the audio to text and analyze the video."
+    
+    # The prompt to understand the audio and convert it into text
+    prompt = "Understand the audio and convert the audio into text. and provide optimized code"
     response = code_model.generate_content([my_audio_file, prompt])
     return response.text
 
+# Function to route the task based on code-related classification
 def route_based_on_classification(transcribed_text, video_file, selected_lines):
-    prompt = f"""
-    Analyze the video '{video_file}' and the spoken issue '{transcribed_text}' 
-    and identify the specific problem in the code lines '{selected_lines}'.
     """
+    Provides a detailed error explanation, steps to solve, and the corrected code.
+    """
+    prompt = f"""
+    1. **Explanation of the Error**: Analyze the video '{video_file}' and the spoken issue '{transcribed_text}' to identify the specific problem in the code lines '{selected_lines}'. Clearly explain the cause of the error.
+    2. **Approach to Solve the Error**: Outline the steps needed to resolve the error, focusing on the necessary code changes or adjustments.
+    3. **Corrected Code**: Provide the corrected version of the code that addresses the identified issue.
+    4. **Summary**: Conclude with a brief summary of the solution, emphasizing the key points and how the changes fix the problem.
+    """
+    
+    # Upload video file to Gemini API
     my_video_file = genai.upload_file(path=video_file)
     while my_video_file.state.name == "PROCESSING":
         time.sleep(5)
         my_video_file = genai.get_file(my_video_file.name)
-
+    
+    # Generate content based on video and prompt
     video_response = code_model.generate_content([my_video_file, prompt])
     return video_response.text
 
@@ -153,11 +166,31 @@ def stop_recording():
 
         final_path = combine_and_cleanup(video_filename, audio_filename, final_filename)
 
+        # Analyze both audio and video
         transcribed_text = run_genai_logic_audio(os.path.join(upload_dir, audio_filename))
         selected_lines = "Captured code lines based on cursor position and analysis"
         result = route_based_on_classification(transcribed_text, os.path.join(upload_dir, video_filename), selected_lines)
 
         return jsonify({"status": "recording_stopped", "file_path": final_path, "result": result})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/process_input', methods=['POST'])
+def process_input():
+    try:
+        data = request.get_json()
+        prompt = data.get('prompt', '')
+
+        # Check if the prompt is empty
+        if not prompt:
+            return jsonify({"error": "Prompt is required"}), 400
+
+        # Simulating processing (e.g., sending to a generative model)
+        response_text = f"Processed result for prompt: {prompt}"
+
+        # Return the processed result
+        return jsonify({"response": response_text}), 200
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
