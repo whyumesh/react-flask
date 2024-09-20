@@ -86,9 +86,40 @@ def run_genai_logic(audio_file, video_file):
             video_file_obj = genai.get_file(video_file_obj.name)
 
         # Send audio and video for analysis
-        prompt = """Identify the specific issue mentioned in the audio file. Extract the relevant video content related to that issue. 
-        Then, perform a task on the extracted video data based on the issue described in the audio.
-        Provide the result in the well-structured manner."""
+        prompt = prompt = """
+1. Audio Issue Identification:
+   - Listen to the provided audio file.
+   - Identify and clearly describe the specific issue mentioned in the audio.
+
+2. Video Content Extraction:
+   - Based on the identified issue, extract relevant segments from the provided video file that directly relate to the described issue.
+
+3. Task on Video Data:
+   - Perform the task(s) described in the audio file on the extracted video content (e.g., analyze, summarize, enhance, etc.).
+
+4. Provide the result in the following structured format:
+
+## **Error Analysis: [Brief Issue Description]**
+
+**Issue:** [Describe the issue identified in the audio]
+
+**Observation:** [Summarize the video content related to the issue]
+
+**Analysis:**
+
+* **Cause 1:** [Explain the primary cause of the issue]
+* **Cause 2:** [Provide additional insights, if applicable]
+
+**Solution:**
+
+1. **Step 1:** [First solution step]
+2. **Step 2:** [Second solution step]
+3. **Step 3:** [Additional steps, if any]
+
+By following these steps, you should be able to resolve the issue successfully.
+"""
+
+
         response = code_model.generate_content([audio_file_obj, video_file_obj, prompt])
         
         return response.text
